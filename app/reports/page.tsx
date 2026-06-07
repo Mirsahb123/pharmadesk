@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,7 +32,7 @@ export default function ReportsPage() {
         const billsData = snapshot.val()
         const allBills = Object.keys(billsData).map(key => ({
           id: key,
-       ...billsData[key]
+         ...billsData[key]
         }))
         setBills(allBills)
         setFilteredBills(allBills)
@@ -87,8 +88,8 @@ export default function ReportsPage() {
     }
   })
   const topMedicines = Object.entries(medicineSales)
-.sort((a: any, b: any) => b[1] - a[1])
-.slice(0, 5)
+   .sort((a: any, b: any) => b[1] - a[1])
+   .slice(0, 5)
 
   const clearFilters = () => {
     setStartDate('')
@@ -160,8 +161,6 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -191,7 +190,6 @@ export default function ReportsPage() {
           </div>
         </motion.div>
 
-        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -242,7 +240,6 @@ export default function ReportsPage() {
                   className="border-2 border-gray-200 pl-11 pr-3 py-3 rounded-2xl w-full focus:border-blue-500 transition-all outline-none bg-white/50 backdrop-blur"
                 />
               </div>
-            </div>
             <div className="flex items-end gap-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -266,7 +263,6 @@ export default function ReportsPage() {
           </div>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, idx) => (
             <motion.div
@@ -287,7 +283,6 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* Data */}
         <div className="grid md:grid-cols-2 gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
