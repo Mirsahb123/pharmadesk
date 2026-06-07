@@ -1,4 +1,5 @@
 "use client"
+
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast, Toaster } from 'sonner'
@@ -43,21 +44,19 @@ export default function SettingsPage() {
     try {
       setLoading(true)
 
-      // Shop Info load karo
       const shopRef = ref(db, 'shopInfo')
       const shopSnap = await get(shopRef)
       if (shopSnap.exists()) {
         setShopInfo(shopSnap.val())
       }
 
-      // Payment Methods load karo
       const methodsRef = ref(db, 'paymentMethods')
       const methodsSnap = await get(methodsRef)
       if (methodsSnap.exists()) {
         const methodsData = methodsSnap.val()
         const allMethods = Object.keys(methodsData).map(key => ({
           id: key,
-      ...methodsData[key]
+        ...methodsData[key]
         }))
         setPaymentMethods(allMethods)
       } else {
@@ -91,7 +90,7 @@ export default function SettingsPage() {
       const methodId = Date.now().toString()
       const method = {
         id: methodId,
-     ...newMethod
+      ...newMethod
       }
 
       const methodRef = ref(db, `paymentMethods/${methodId}`)
@@ -174,12 +173,11 @@ export default function SettingsPage() {
       </div>
     )
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-6">
       <Toaster position="top-center" richColors />
       <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,7 +209,6 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, idx) => (
             <motion.div
@@ -233,7 +230,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Shop Info */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -366,7 +362,6 @@ export default function SettingsPage() {
             </div>
           </motion.div>
 
-          {/* Payment Methods */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
