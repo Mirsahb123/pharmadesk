@@ -1,4 +1,5 @@
 "use client"
+
 import { Auth, Shop, User } from '@/lib/auth'
 import { getInventory, getBills, getPayments, getCustomers } from '@/lib/db-firebase'
 import { useEffect, useState } from 'react'
@@ -32,7 +33,6 @@ export default function Dashboard() {
     setCurrentUser(user)
     loadData(user)
 
-    // Har 30 minute = 1800000 ms me auto reload
     const interval = setInterval(() => {
       console.log('Auto refresh: 30 min')
       loadData(user)
@@ -116,7 +116,7 @@ export default function Dashboard() {
 
   const lowStock = inventory.filter((m: any) => {
     const total = m.batches
-   ? m.batches.reduce((s: number, b: any) => s + (b.qty || 0), 0)
+     ? m.batches.reduce((s: number, b: any) => s + (b.qty || 0), 0)
       : (m.qty || 0)
     return total > 0 && total < 10
   }).length
@@ -193,9 +193,9 @@ export default function Dashboard() {
     <div
       className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-6"
       style={{
-        background: shop?.theme === 'green'? 'linear-gradient(to br, #f0fdf4, #dcfce7)' :
-          shop?.theme === 'purple'? 'linear-gradient(to br, #faf5ff, #f3e8ff)' :
-            'linear-gradient(to br, #eff6ff, #dbeafe)'
+        background: shop?.theme === 'green'? 'linear-gradient(to bottom right, #f0fdf4, #dcfce7)' :
+          shop?.theme === 'purple'? 'linear-gradient(to bottom right, #faf5ff, #f3e8ff)' :
+            'linear-gradient(to bottom right, #eff6ff, #dbeafe)'
       }}
     >
       <Toaster position="top-center" richColors />
@@ -224,7 +224,6 @@ export default function Dashboard() {
                   <span className="text-xs text-green-600 font-semibold">Live</span>
                 </p>
               </div>
-            </div>
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.05 }}
