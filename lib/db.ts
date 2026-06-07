@@ -1,24 +1,26 @@
-import { get, ref, set, push, update, remove } from 'firebase/database'
-import { db, Medicine } from './db-firebase'
+// lib/db.ts
+// Backward compatibility layer - sab functions db-firebase.ts se re-export kar rahe
 
-export const getInventory = async (): Promise<Medicine[]> => {
-  const snapshot = await get(ref(db, 'inventory'))
-  if (!snapshot.exists()) return []
-  const data = snapshot.val()
-  return Object.keys(data).map(key => ({ id: key,...data[key] }))
-}
+import { 
+  getInventory, 
+  saveMedicine, 
+  updateMedicine, 
+  deleteMedicine, 
+  Medicine 
+} from './db-firebase'
+
+// Re-export with same names jo purane code me use ho rahe the
+export { getInventory }
 
 export const addMedicine = async (med: Omit<Medicine, 'id'>) => {
-  const newRef = push(ref(db, 'inventory'))
-  await set(newRef, {...med, createdAt: Date.now() })
+  return saveMedicine(med)
 }
 
 export const updateStock = async (id: string, qty: number) => {
-  await update(ref(db, `inventory/${id}`), { qty })
+  return updateMedicine(id, { qty })
 }
 
-export const deleteMedicine = async (id: string) => {
-  await remove(ref(db, `inventory/${id}`))
-}
+export { deleteMedicine }
 
+// Type bhi re-export kar de
 export type { Medicine }
