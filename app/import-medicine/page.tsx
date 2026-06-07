@@ -1,4 +1,5 @@
 "use client"
+
 import { getInventory, addMedicine, updateMedicine, deleteMedicine, Medicine } from '@/lib/db-firebase'
 import { Auth } from '@/lib/auth'
 import { useEffect, useState, useRef } from 'react'
@@ -33,7 +34,6 @@ export default function ImportMedicinePage() {
   })
 
   useEffect(() => {
-    // Shop ID check karo
     const user = Auth.getCurrentUser()
     if (!user?.shopId) {
       toast.error('Login nahi ho. Pehle login karo')
