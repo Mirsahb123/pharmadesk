@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// Force dynamic rendering - SSR skip kar dega
+export const dynamic = 'force-dynamic'
+
 type Medicine = {
   id: string
   name: string
@@ -13,19 +16,18 @@ type Medicine = {
 
 export default function AlertsPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [isClient, setIsClient] = useState(false)
+  const [today, setToday] = useState<Date | null>(null)
 
   useEffect(() => {
-    setIsClient(true)
+    setToday(new Date())
     const inv = JSON.parse(localStorage.getItem('inventory') || '[]')
     setMedicines(inv)
   }, [])
 
-  if (!isClient) {
+  if (!today) {
     return <div className="min-h-screen bg-gray-50 p-6">Loading...</div>
   }
 
-  const today = new Date()
   const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
 
   const expired = medicines.filter(m => m.expiry && new Date(m.expiry) < today)
