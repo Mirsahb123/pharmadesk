@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from 'react'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
@@ -10,11 +11,11 @@ export default function QRGeneratorPage() {
   const [showId, setShowId] = useState(false)
   const [qrSizeMM, setQrSizeMM] = useState(15)
   const [cols, setCols] = useState(10)
-  const [gapMM, setGapMM] = useState(2) // Cutting space
+  const [gapMM, setGapMM] = useState(2)
 
   const generateCodes = () => {
     if(count < 1 || count > 500) return alert('1 se 500 tak QR banao')
-    
+
     const newCodes = []
     for(let i = 0; i < count; i++) {
       newCodes.push(`MED_${Date.now()}_${i}`)
@@ -28,7 +29,6 @@ export default function QRGeneratorPage() {
     window.print()
   }
 
-  // A4 = 210mm, margin 5mm each side = 200mm usable
   const totalGap = (cols - 1) * gapMM
   const boxWidthMM = Math.floor((200 - totalGap) / cols)
 
@@ -37,10 +37,10 @@ export default function QRGeneratorPage() {
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
-       .qr-sheet,.qr-sheet * { visibility: visible; }
-       .qr-sheet { position: absolute; left: 0; top: 0; width: 100%; }
-       .no-print { display: none!important; }
-       .qr-item { page-break-inside: avoid; }
+         .qr-sheet,.qr-sheet * { visibility: visible; }
+         .qr-sheet { position: absolute; left: 0; top: 0; width: 100%; }
+         .no-print { display: none!important; }
+         .qr-item { page-break-inside: avoid; }
           @page { size: A4; margin: 5mm; }
         }
       `}</style>
@@ -55,24 +55,24 @@ export default function QRGeneratorPage() {
           <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
             <h2 className="text-xl font-bold mb-2">Blank QR Stickers Banao</h2>
             <p className="text-gray-600 mb-4">Ye QR kisi bhi medicine pe laga do. Dotted line se kaat lena.</p>
-            
+
             <div className="grid md:grid-cols-4 gap-4">
               <div className="flex gap-3 items-center">
                 <label className="font-semibold">Kitne QR:</label>
-                <input 
+                <input
                   type="number"
                   value={count}
                   onChange={e=>setCount(Number(e.target.value))}
                   min="1"
                   max="500"
-                  className="border p-2 rounded w-24" 
+                  className="border p-2 rounded w-24"
                 />
               </div>
 
               <div className="flex gap-3 items-center">
                 <label className="font-semibold">Columns:</label>
-                <select 
-                  value={cols} 
+                <select
+                  value={cols}
                   onChange={e=>setCols(Number(e.target.value))}
                   className="border p-2 rounded"
                 >
@@ -85,26 +85,26 @@ export default function QRGeneratorPage() {
 
               <div className="flex gap-3 items-center">
                 <label className="font-semibold">QR Size:</label>
-                <input 
+                <input
                   type="range"
                   min="8"
                   max="18"
                   value={qrSizeMM}
                   onChange={e=>setQrSizeMM(Number(e.target.value))}
-                  className="w-24" 
+                  className="w-24"
                 />
                 <span className="text-sm w-12">{qrSizeMM}mm</span>
               </div>
 
               <div className="flex gap-3 items-center">
                 <label className="font-semibold">Cutting Gap:</label>
-                <input 
+                <input
                   type="range"
                   min="1"
                   max="4"
                   value={gapMM}
                   onChange={e=>setGapMM(Number(e.target.value))}
-                  className="w-24" 
+                  className="w-24"
                 />
                 <span className="text-sm w-12">{gapMM}mm</span>
               </div>
@@ -112,22 +112,22 @@ export default function QRGeneratorPage() {
 
             <div className="flex gap-3 mt-4 items-center">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={showId}
                   onChange={e=>setShowId(e.target.checked)}
                 />
                 <span className="text-sm">ID Text Dikhana Hai?</span>
               </label>
 
-              <button 
+              <button
                 onClick={generateCodes}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"
               >
                 Generate QR Codes
               </button>
               {generated && (
-                <button 
+                <button
                   onClick={printSheet}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"
                 >
@@ -142,15 +142,15 @@ export default function QRGeneratorPage() {
               <p className="text-sm text-gray-600 mb-4">
                 Total: {codes.length} QR | {cols} Columns | Box: {boxWidthMM}mm | QR: {qrSizeMM}mm | Gap: {gapMM}mm
               </p>
-              <div 
+              <div
                 className="grid"
                 style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: `${gapMM}px` }}
               >
                 {codes.slice(0, cols * 2).map((code, idx) => (
                   <div key={idx} className="border border-dashed border-gray-400 bg-white flex flex-col items-center justify-center p-1" style={{ aspectRatio: '1' }}>
                     <div style={{ width: `${qrSizeMM * 3}px`, height: `${qrSizeMM * 3}px` }}>
-                      <QRCode 
-                        value={code} 
+                      <QRCode
+                        value={code}
                         size={qrSizeMM * 3}
                         style={{ width: "100%", height: "100%" }}
                       />
@@ -160,7 +160,7 @@ export default function QRGeneratorPage() {
                 ))}
                 {codes.length > cols * 2 && (
                   <div className="col-span-full text-center text-gray-500 text-sm py-4">
-                  ... aur {codes.length - cols * 2} QR. Print karo sab aa jayenge
+                 ... aur {codes.length - cols * 2} QR. Print karo sab aa jayenge
                   </div>
                 )}
               </div>
@@ -169,20 +169,19 @@ export default function QRGeneratorPage() {
         </div>
       </div>
 
-      {/* Print Sheet - Cutting Lines Wala */}
       {generated && (
         <div className="qr-sheet hidden print:block">
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: `repeat(${cols}, 1fr)`, 
-            gap: `${gapMM}mm`, 
-            padding: '0' 
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${cols}, 1fr)`,
+            gap: `${gapMM}mm`,
+            padding: '0'
           }}>
             {codes.map((code, idx) => (
-              <div key={idx} className="qr-item" style={{ 
+              <div key={idx} className="qr-item" style={{
                 width: `${boxWidthMM}mm`,
                 height: `${boxWidthMM}mm`,
-                border: '0.3mm dashed #999', 
+                border: '0.3mm dashed #999',
                 padding: '1mm',
                 display: 'flex',
                 flexDirection: 'column',
@@ -191,15 +190,15 @@ export default function QRGeneratorPage() {
                 background: '#fff',
                 boxSizing: 'border-box'
               }}>
-                <QRCode 
-                  value={code} 
+                <QRCode
+                  value={code}
                   size={qrSizeMM * 3.78}
                   style={{ width: `${qrSizeMM}mm`, height: `${qrSizeMM}mm` }}
                 />
                 {showId && (
-                  <p style={{ 
-                    fontSize: '2.5pt', 
-                    fontFamily: 'monospace', 
+                  <p style={{
+                    fontSize: '2.5pt',
+                    fontFamily: 'monospace',
                     margin: '0.3mm 0 0 0',
                     lineHeight: '1'
                   }}>
