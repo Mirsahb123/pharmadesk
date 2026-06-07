@@ -1,12 +1,7 @@
-import { defaultCache } from "@serwist/next/worker";
-import { Serwist } from "serwist";
+import type { NextConfig } from 'next'
 
-const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
-  clientsClaim: true,
-  navigationPreload: true,
-  runtimeCaching: defaultCache,
-});
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+}
 
-serwist.addEventListeners();
+export default nextConfig
