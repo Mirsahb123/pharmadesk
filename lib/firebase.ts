@@ -1,5 +1,5 @@
 // lib/firebase.ts
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getDatabase, ref, get, set, update, remove, push, child } from 'firebase/database'
 
 const firebaseConfig = {
@@ -12,6 +12,8 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
 }
 
-const app = initializeApp(firebaseConfig)
+// Firebase ko multiple times initialize hone se bachao
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+
 export const db = getDatabase(app)
 export { ref, get, set, update, remove, push, child }
