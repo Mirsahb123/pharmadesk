@@ -1,7 +1,11 @@
 "use client"
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast, Toaster } from 'sonner'
+import { motion } from 'framer-motion'
+import { Package, Plus, X, Trash2, Save } from 'lucide-react'
 
 export default function PurchasePage() {
   const router = useRouter()
@@ -44,24 +48,25 @@ export default function PurchasePage() {
   }, [router])
 
   const addSupplier = () => {
-    if (!supplierForm.name) return alert('Supplier name zaroori hai')
-    const newSupplier = { id: Date.now(),...supplierForm, balance: 0 }
+    if (!supplierForm.name) return toast.error('Supplier name zaroori hai')
+    const newSupplier = { id: Date.now().toString(),...supplierForm, balance: 0 }
     const updated = [...suppliers, newSupplier]
     localStorage.setItem('suppliers', JSON.stringify(updated))
     setSuppliers(updated)
     setSupplierForm({ name: '', phone: '', address: '' })
     setShowSupplierModal(false)
     setPurchase({...purchase, supplierId: newSupplier.id})
+    toast.success('Supplier added')
   }
 
   const addItemToPurchase = () => {
     if (!itemForm.name ||!itemForm.qty ||!itemForm.costPrice) {
-      return alert('Medicine, Qty aur Cost Price zaroori hai')
+      return toast.error('Medicine, Qty aur Cost Price zaroori hai')
     }
 
     const itemTotal = parseFloat(itemForm.qty) * parseFloat(itemForm.costPrice)
     const newItem = {
-      id: Date.now(),
+      id: Date.now().toString(),
      ...itemForm,
       costPrice: parseFloat(itemForm.costPrice),
       salePrice: parseFloat(itemForm.salePrice) || parseFloat(itemForm.costPrice) * 1.2,
@@ -80,26 +85,25 @@ export default function PurchasePage() {
     })
 
     setItemForm({ medicineId: '', name: '', batchNo: '', expiry: '', costPrice: '', salePrice: '', qty: '' })
+    toast.success('Item added')
   }
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string) => {
     const updatedItems = purchase.items.filter(i => i.id!== id)
     const newTotal = updatedItems.reduce((sum, i) => sum + i.total, 0)
     setPurchase({...purchase, items: updatedItems, total: newTotal, due: newTotal - purchase.paid })
   }
 
   const savePurchase = () => {
-    if (!purchase.supplierId) return alert('Supplier select karo')
-    if (!purchase.invoiceNo) return alert('Invoice No. likho')
-    if (purchase.items.length === 0) return alert('Kam se kam 1 item add karo')
+    if (!purchase.supplierId) return toast.error('Supplier select karo')
+    if (!purchase.invoiceNo) return toast.error('Invoice No. likho')
+    if (purchase.items.length === 0) return toast.error('Kam se kam 1 item add karo')
 
-    // 1. Save purchase
-    const newPurchase = { id: Date.now(),...purchase }
+    const newPurchase = { id: Date.now().toString(),...purchase }
     const updatedPurchases = [...purchases, newPurchase]
     localStorage.setItem('purchases', JSON.stringify(updatedPurchases))
     setPurchases(updatedPurchases)
 
-    // 2. Update inventory stock
     let updatedInventory = [...inventory]
     purchase.items.forEach(pItem => {
       const existingIndex = updatedInventory.findIndex(m =>
@@ -107,27 +111,25 @@ export default function PurchasePage() {
       )
 
       if (existingIndex >= 0) {
-        // Existing medicine - add batch
         if (!updatedInventory[existingIndex].batches) updatedInventory[existingIndex].batches = []
         updatedInventory[existingIndex].batches.push({
-          id: Date.now() + Math.random(),
+          id: (Date.now() + Math.random()).toString(),
           batchNo: pItem.batchNo || 'N/A',
           qty: pItem.qty,
           expiry: pItem.expiry,
           costPrice: pItem.costPrice
         })
-        updatedInventory[existingIndex].price = pItem.salePrice // Update sale price
+        updatedInventory[existingIndex].price = pItem.salePrice
       } else {
-        // New medicine - create with batch
         updatedInventory.push({
-          id: Date.now() + Math.random(),
+          id: (Date.now() + Math.random()).toString(),
           name: pItem.name,
           type: 'Tablet',
           price: pItem.salePrice,
           costPrice: pItem.costPrice,
           qr: `MED-${Date.now()}`,
           batches: [{
-            id: Date.now(),
+            id: Date.now().toString(),
             batchNo: pItem.batchNo || 'N/A',
             qty: pItem.qty,
             expiry: pItem.expiry,
@@ -139,18 +141,16 @@ export default function PurchasePage() {
     localStorage.setItem('inventory', JSON.stringify(updatedInventory))
     setInventory(updatedInventory)
 
-    // 3. Update supplier balance
     const updatedSuppliers = suppliers.map(s =>
       s.id === purchase.supplierId
-       ? {...s, balance: (s.balance || 0) + purchase.due }
+      ? {...s, balance: (s.balance || 0) + purchase.due }
         : s
     )
     localStorage.setItem('suppliers', JSON.stringify(updatedSuppliers))
     setSuppliers(updatedSuppliers)
 
-    alert(`Purchase save ho gaya!\nTotal: Rs. ${purchase.total}\nDue: Rs. ${purchase.due}\nStock update ho gaya`)
+    toast.success(`Purchase save ho gaya! Total: Rs. ${purchase.total}, Due: Rs. ${purchase.due}`)
 
-    // Reset form
     setPurchase({
       invoiceNo: '',
       date: new Date().toISOString().split('T')[0],
@@ -161,11 +161,11 @@ export default function PurchasePage() {
       due: 0
     })
   }
-
-  if (!currentUser) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+    if (!currentUser) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-6">
+      <Toaster position="top-center" richColors />
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-black text-gray-900">📦 Purchase / Stock In</h1>
@@ -174,7 +174,6 @@ export default function PurchasePage() {
           </Link>
         </div>
 
-        {/* Invoice Details */}
         <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
           <h2 className="text-xl font-bold mb-4">Invoice Details</h2>
           <div className="grid md:grid-cols-4 gap-4">
@@ -209,7 +208,6 @@ export default function PurchasePage() {
           </div>
         </div>
 
-        {/* Add Item */}
         <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
           <h2 className="text-xl font-bold mb-4">Add Item</h2>
           <div className="grid md:grid-cols-7 gap-3">
@@ -255,13 +253,13 @@ export default function PurchasePage() {
           </div>
           <button
             onClick={addItemToPurchase}
-            className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700"
+            className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2"
           >
-            + Add to Purchase
+            <Plus className="w-5 h-5" />
+            Add to Purchase
           </button>
         </div>
 
-        {/* Items Table */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden mb-6">
           <table className="w-full">
             <thead className="bg-gray-100">
@@ -287,7 +285,8 @@ export default function PurchasePage() {
                   <td className="p-4">{item.qty}</td>
                   <td className="p-4 font-bold">Rs. {item.total}</td>
                   <td className="p-4">
-                    <button onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-800 font-semibold">
+                    <button onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-800 font-semibold flex items-center gap-1">
+                      <Trash2 className="w-4 h-4" />
                       Delete
                     </button>
                   </td>
@@ -300,7 +299,6 @@ export default function PurchasePage() {
           )}
         </div>
 
-        {/* Total & Save */}
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="grid md:grid-cols-3 gap-6">
             <div>
@@ -323,16 +321,21 @@ export default function PurchasePage() {
           </div>
           <button
             onClick={savePurchase}
-            className="w-full mt-6 bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700"
+            className="w-full mt-6 bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 flex items-center justify-center gap-2"
           >
+            <Save className="w-5 h-5" />
             Save Purchase & Update Stock
           </button>
         </div>
 
-        {/* Add Supplier Modal */}
         {showSupplierModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowSupplierModal(false)}>
-            <div className="bg-white p-6 rounded-xl max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-white p-6 rounded-xl max-w-md w-full"
+              onClick={e => e.stopPropagation()}
+            >
               <h3 className="text-2xl font-bold mb-4">Add New Supplier</h3>
               <div className="space-y-3">
                 <input
@@ -362,7 +365,7 @@ export default function PurchasePage() {
                   Cancel
                 </button>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
       </div>
