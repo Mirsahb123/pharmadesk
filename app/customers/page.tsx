@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
 
+export const dynamic = 'force-dynamic'
+
 export default function CustomersPage() {
   const router = useRouter()
   const [customers, setCustomers] = useState<any[]>([])
@@ -17,10 +19,13 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [showQRCard, setShowQRCard] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentForm, setPaymentForm] = useState({ amount: '', note: '', date: new Date().toISOString().split('T')[0] })
+  const [paymentForm, setPaymentForm] = useState({ amount: '', note: '', date: '' })
   const [shopId, setShopId] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+    setPaymentForm(prev => ({...prev, date: new Date().toISOString().split('T')[0] }))
     const user = Auth.getCurrentUser()
     if (!user?.shopId) {
       alert('Login nahi ho. Pehle login karo')
@@ -53,11 +58,11 @@ export default function CustomersPage() {
     if(!form.name ||!form.phone) return alert('Name and Phone are required')
     if (!shopId) return alert('Login nahi ho')
 
-    const customerId = `CUST_${Date.now()}`
+    const customerId = `CUST_${crypto.randomUUID()}`
     const baseUrl = typeof window!== 'undefined'? window.location.origin : ''
     const newCustomer = {
       id: customerId,
-    ...form,
+   ...form,
       createdAt: new Date().toISOString(),
       shopQR: customerId,
       customerQR: `${baseUrl}/customers/${customerId}`,
@@ -116,14 +121,14 @@ export default function CustomersPage() {
     const customerBills = bills.filter((b: any) => b.customerPhone === customer.phone || b.customerId === customer.id)
     const totalBilled = customerBills.reduce((sum: number, b: any) => sum + (b.total || 0), 0)
     const totalPaid = payments.filter((p: any) => (p.customerPhone === customer.phone || p.customerId === customer.id) && p.status === 'approved')
-    .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+   .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
     return totalBilled - totalPaid
   }
 
   const getCustomerHistory = (customer: any) => {
     return bills.filter(b => b.customerPhone === customer.phone || b.customerId === customer.id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
+   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+   .slice(0, 5)
   }
 
   const getLastBillDate = (customer: any) => {
@@ -162,7 +167,7 @@ export default function CustomersPage() {
 
     const amount = parseFloat(paymentForm.amount)
     const newPayment = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       customerId: selectedCustomer.id,
       customerPhone: selectedCustomer.phone,
       customerName: selectedCustomer.name,
@@ -183,7 +188,7 @@ export default function CustomersPage() {
     }
   }
 
-  const approveOrder = async (orderId: number) => {
+  const approveOrder = async (orderId: string) => {
     const order = orders.find((o: any) => o.id === orderId)
     if (!order) return
 
@@ -196,7 +201,7 @@ export default function CustomersPage() {
     }
   }
 
-  const approvePayment = async (paymentId: number) => {
+  const approvePayment = async (paymentId: string) => {
     const payment = payments.find((p: any) => p.id === paymentId)
     if (!payment) return
 
@@ -209,7 +214,7 @@ export default function CustomersPage() {
     }
   }
 
-  const rejectPayment = async (paymentId: number) => {
+  const rejectPayment = async (paymentId: string) => {
     const payment = payments.find((p: any) => p.id === paymentId)
     if (!payment) return
 
@@ -225,17 +230,21 @@ export default function CustomersPage() {
   const pendingOrders = orders.filter((o: any) => o.status === 'pending')
   const pendingPayments = payments.filter((p: any) => p.status === 'pending')
 
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gray-50 p-6">Loading...</div>
+  }
+
   return (
     <>
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
-        .qr-card,.qr-card * { visibility: visible; }
-        .qr-card { position: absolute; left: 0; top: 0; width: 100%; }
-        .no-print { display: none!important; }
+       .qr-card,.qr-card * { visibility: visible; }
+       .qr-card { position: absolute; left: 0; top: 0; width: 100%; }
+       .no-print { display: none!important; }
         }
         @media screen {
-        .qr-card {
+       .qr-card {
             position: fixed;
             top: 0;
             left: 0;
