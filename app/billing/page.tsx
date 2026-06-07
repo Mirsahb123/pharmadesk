@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import { getInventory, saveBill, Medicine } from '@/lib/db-firebase'
 import { Auth } from '@/lib/auth'
 import { useState, useEffect, useRef } from 'react'
@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast, Toaster } from 'sonner'
 import { ShoppingCart, Scan, Trash2, Printer, Package, Percent, ArrowLeft, Pill, Droplet, Syringe, HeartPulse, X, Zap, Plus, CheckCircle } from 'lucide-react'
+
+// Force client-side only - Hydration fix
+export const dynamic = 'force-dynamic'
 
 const MEDICINE_CATEGORIES = [
   { name: 'Tablet', icon: Pill },
@@ -32,6 +35,7 @@ export default function BillingPage() {
   const [customerName, setCustomerName] = useState('Walk-in Customer')
   const [customerPhone, setCustomerPhone] = useState('')
   const [shopId, setShopId] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   const [selectedType, setSelectedType] = useState('Tablet')
   const [productName, setProductName] = useState('')
@@ -57,6 +61,7 @@ export default function BillingPage() {
   const [manualMode, setManualMode] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     const user = Auth.getCurrentUser()
     if (!user?.shopId) {
       toast.error('Login nahi ho. Pehle login karo')
@@ -77,10 +82,8 @@ export default function BillingPage() {
     try {
       const data = await getInventory()
       setMedicines(data)
-      console.log('Loaded from Firebase:', data)
     } catch (err: any) {
       toast.error('Firebase Error: ' + err.message)
-      console.error(err)
     }
   }
 
@@ -128,8 +131,7 @@ export default function BillingPage() {
         toast.success('⚡ Camera ON', { icon: '📷' })
       }
     } catch (err: any) {
-      console.log(err)
-      toast.error('Camera access nahi mila. Chrome me Allow karo')
+      toast.error('Camera access nahi mila')
       setIsScanning(false)
     }
   }
@@ -146,7 +148,7 @@ export default function BillingPage() {
       }
 
       const newScannedItem = {
-        id: Date.now() + Math.random(),
+        id: crypto.randomUUID(),
         inventoryId: found.id,
         name: found.name,
         type: found.type,
@@ -182,7 +184,7 @@ export default function BillingPage() {
     if (parseInt(qty) <= 0) return toast.error('Qty 0 se zyada honi chahiye')
 
     const newItem = {
-      id: Date.now() + Math.random(),
+      id: crypto.randomUUID(),
       inventoryId: null,
       name: productName,
       type: selectedType,
@@ -192,7 +194,7 @@ export default function BillingPage() {
       unitsPerStrip: unitsPerStrip,
       stripsPerBox: stripsPerBox,
       totalPieces: PACKET_SUPPORTED.includes(selectedType)
-    ? (unitType === 'Piece'? parseInt(qty) : unitType === 'Strip'? parseInt(qty) * unitsPerStrip : parseInt(qty) * stripsPerBox * unitsPerStrip)
+      ? (unitType === 'Piece'? parseInt(qty) : unitType === 'Strip'? parseInt(qty) * unitsPerStrip : parseInt(qty) * stripsPerBox * unitsPerStrip)
         : parseInt(qty),
       qrCode: 'MANUAL'
     }
@@ -204,21 +206,21 @@ export default function BillingPage() {
     setQty('')
   }
 
-  const removeFromScannedList = (id: number) => {
+  const removeFromScannedList = (id: string) => {
     const item = scannedList.find(i => i.id === id)
     if (item) scannedCodesRef.current.delete(item.qrCode)
     setScannedList(scannedList.filter(i => i.id!== id))
     toast.info('Removed from list')
   }
 
-  const updateScannedQty = (id: number, newQty: number) => {
+  const updateScannedQty = (id: string, newQty: number) => {
     if (newQty < 0) return
     const item = scannedList.find(i => i.id === id)
     if (item && newQty > item.stockAvailable) return toast.error(`Stock kam hai! Available: ${item.stockAvailable}`)
     setScannedList(scannedList.map(i => i.id === id? {...i, qty: newQty } : i))
   }
 
-  const updateScannedUnitType = (id: number, newUnitType: string) => {
+  const updateScannedUnitType = (id: string, newUnitType: string) => {
     setScannedList(scannedList.map(i => i.id === id? {...i, unitType: newUnitType } : i))
   }
 
@@ -228,7 +230,7 @@ export default function BillingPage() {
 
     const newCartItems = itemsWithQty.map(item => {
       const totalPieces = PACKET_SUPPORTED.includes(item.type)
-    ? (item.unitType === 'Piece'? item.qty : item.unitType === 'Strip'? item.qty * item.unitsPerStrip : item.qty * item.stripsPerBox * item.unitsPerStrip)
+      ? (item.unitType === 'Piece'? item.qty : item.unitType === 'Strip'? item.qty * item.unitsPerStrip : item.qty * item.stripsPerBox * item.unitsPerStrip)
         : item.qty
 
       return {
@@ -252,12 +254,12 @@ export default function BillingPage() {
     toast.success(`${newCartItems.length} items added to cart!`, { icon: '🛒' })
   }
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCart(cart.filter(c => c.id!== id))
     toast.info('Item removed')
   }
 
-  const updateCartQty = (id: number, newQty: number) => {
+  const updateCartQty = (id: string, newQty: number) => {
     if (newQty <= 0) return removeFromCart(id)
     const item = cart.find(c => c.id === id)
     if (!item) return
@@ -265,17 +267,17 @@ export default function BillingPage() {
     if (item.inventoryId) {
       const med = medicines.find(m => m.id === item.inventoryId)
       const newTotalPieces = PACKET_SUPPORTED.includes(item.type)
-    ? (item.unitType === 'Piece'? newQty : item.unitType === 'Strip'? newQty * item.unitsPerStrip : newQty * item.stripsPerBox * item.unitsPerStrip)
+      ? (item.unitType === 'Piece'? newQty : item.unitType === 'Strip'? newQty * item.unitsPerStrip : newQty * item.stripsPerBox * item.unitsPerStrip)
         : newQty
 
       if (med && newTotalPieces > med.qty) return toast.error(`Stock kam hai! Available: ${med.qty}`)
     }
 
     setCart(cart.map(c => c.id === id? {
-  ...c,
+    ...c,
       qty: newQty,
       totalPieces: PACKET_SUPPORTED.includes(c.type)
-    ? (c.unitType === 'Piece'? newQty : c.unitType === 'Strip'? newQty * c.unitsPerStrip : newQty * c.stripsPerBox * c.unitsPerStrip)
+      ? (c.unitType === 'Piece'? newQty : c.unitType === 'Strip'? newQty * c.unitsPerStrip : newQty * c.stripsPerBox * c.unitsPerStrip)
         : newQty
     } : c))
   }
@@ -336,6 +338,10 @@ export default function BillingPage() {
     m.name.toLowerCase().includes(productName.toLowerCase()) && m.qty > 0
   )
 
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gray-50 p-6">Loading...</div>
+  }
+
   if (!shopId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -347,9 +353,7 @@ export default function BillingPage() {
         </div>
       </div>
     )
-  }
-
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
       <Toaster position="top-center" richColors />
       <div className="max-w-7xl mx-auto">
@@ -646,7 +650,7 @@ export default function BillingPage() {
               <p>Balance: Rs. {balance.toFixed(2)}</p>
             </div>
             <p className="text-center text-xs mt-6">Thank you! Get well soon 🙏</p>
-                    </div>
+          </div>
         </div>
       </div>
     </div>
