@@ -1,47 +1,130 @@
-
-   "use client";
+"use client";
 import { use, useEffect, useState } from "react";
 import { DB, Shop } from "@/lib/storage";
-import { Settings } from "lucide-react";
+import { ArrowLeft, BarChart3, Package, ShoppingCart, Users, Receipt } from "lucide-react";
 
-export default function ShopDashboard({ params }: { params: Promise<{ store: string }> }) {
+export default function DashboardPage({ params }: { params: Promise<{ store: string }> }) {
   const { store } = use(params);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [stats, setStats] = useState({
+    products: 0,
+    lowStock: 0,
+    sales: 0,
+    customers: 0
+  });
 
   useEffect(() => {
     const foundShop = DB.shops.find(store);
     setShop(foundShop || null);
+
+    if (foundShop) {
+      const products = DB.products.getByShop(store);
+      const lowStockItems = products.filter(p => p.stock < 10);
+
+      setStats({
+        products: products.length,
+        lowStock: lowStockItems.length,
+        sales: 0,
+        customers: 0
+      });
+    }
   }, [store]);
 
-  if (!shop) return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-red-600">Shop not found</h1>
-      <p className="text-gray-600 mt-2">Slug: {store}</p>
-      <a href="/admin/shops" className="text-blue-600 underline mt-4 inline-block">Back to Admin</a>
-    </div>
-  );
+  if (!shop) return <div className="p-8 text-center">Loading...</div>;
+
+  const menuItems = [
+    {
+      icon: ShoppingCart,
+      title: "POS",
+      desc: "Point of Sale",
+      href: `/store/${store}/sales`,
+      color: "bg-blue-500"
+    },
+    {
+      icon: Package,
+      title: "Inventory",
+      desc: "Manage Stock",
+      href: `/store/${store}/inventory`,
+      color: "bg-green-500"
+    },
+    {
+      icon: Users,
+      title: "Customers",
+      desc: "Customer Data",
+      href: `/store/${store}/customers`,
+      color: "bg-purple-500"
+    },
+    {
+      icon: Receipt,
+      title: "Reports",
+      desc: "Sales Reports",
+      href: `/store/${store}/reports`,
+      color: "bg-orange-500"
+    }
+  ];
 
   return (
-    <div className="p-8" style={{borderTop: `4px solid ${shop.themeColor}`}}>
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex items-center gap-4">
-          {shop.logo && <img src={shop.logo} className="w-16 h-16 rounded-2xl object-cover" />}
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <a href="/" className="p-2 hover:bg-gray-200 rounded-lg">
+            <ArrowLeft className="w-6 h-6" />
+          </a>
           <div>
             <h1 className="text-3xl font-bold" style={{color: shop.themeColor}}>{shop.name}</h1>
-            <p className="text-gray-600 italic">{shop.slogan}</p>
+            <p className="text-gray-600">Store Dashboard</p>
           </div>
         </div>
-        <a href={`/store/${store}/settings`} className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200">
-          <Settings className="w-5 h-5" /> Settings
-        </a>
-      </div>
 
-      <p className="text-gray-600 mb-8">Offline Mode - Data saved in Browser</p>
-      <div className="grid grid-cols-4 gap-4">
-        <a href={`/store/${store}/sales`} className="bg-white p-6 rounded-2xl shadow text-center hover:shadow-lg"><p className="text-2xl mb-2">🛒</p><p className="font-bold">POS</p></a>
-        <a href={`/store/${store}/inventory`} className="bg-white p-6 rounded-2xl shadow text-center hover:shadow-lg"><p className="text-2xl mb-2">📦</p><p className="font-bold">Stock</p></a>
-        <a href={`/store/${store}/customers`} className="bg-white p-6 rounded-2xl shadow text-center hover:shadow-lg"><p className="text-2xl mb-2">👥</p><p className="font-bold">Customers</p></a>
-        <a href={`/store/${store}/reports`} className="bg-white p-6 rounded-2xl shadow text-center hover:shadow-lg"><p className="text-2xl mb-2">📊</p><p className="font-bold">Reports</p></a>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-600 font-medium">Total Products</p>
+              <Package className="w-8 h-8 text-blue-500" />
+            </div>
+            <p className="text-3xl font-black" style={{color: shop.themeColor}}>{stats.products}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-600 font-medium">Low Stock</p>
+              <BarChart3 className="w-8 h-8 text-red-500" />
+            </div>
+            <p className="text-3xl font-black text-red-500">{stats.lowStock}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-600 font-medium">Today Sales</p>
+              <ShoppingCart className="w-8 h-8 text-green-500" />
+            </div>
+            <p className="text-3xl font-black text-green-500">₹{stats.sales}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-600 font-medium">Customers</p>
+              <Users className="w-8 h-8 text-purple-500" />
+            </div>
+            <p className="text-3xl font-black text-purple-500">{stats.customers}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {menuItems.map((item) => (
+            <a
+              key={item.title}
+              href={item.href}
+              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-105 group"
+            >
+              <div className={`${item.color} w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition`}>
+                <item.icon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-bold text-xl mb-2">{item.title}</h3>
+              <p className="text-gray-600">{item.desc}</p>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );
