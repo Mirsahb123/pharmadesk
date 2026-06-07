@@ -26,6 +26,40 @@ export interface Medicine {
   updatedAt?: number
 }
 
+export interface Bill {
+  id?: string
+  customerId?: string
+  customerName?: string
+  total: number
+  paidAmount?: number
+  balance?: number
+  status?: 'pending' | 'paid'
+  items?: unknown[]
+  createdAt?: number
+  date?: string
+  updatedAt?: number
+}
+
+export interface Payment {
+  id?: string
+  customerId?: string
+  billId?: string
+  amount: number
+  status: 'pending' | 'approved' | 'rejected'
+  paymentMethod?: string
+  createdAt?: number
+  updatedAt?: number
+}
+
+export interface Order {
+  id?: string
+  customerId?: string
+  items?: unknown[]
+  status?: 'pending' | 'completed' | 'cancelled'
+  createdAt?: number
+  date?: string
+}
+
 // CUSTOMERS
 export const saveCustomer = async (customer: Customer): Promise<Customer> => {
   const user = Auth.getCurrentUser()
@@ -35,7 +69,7 @@ export const saveCustomer = async (customer: Customer): Promise<Customer> => {
     ? ref(db, `shops/${user.shopId}/customers/${customer.id}`)
     : push(ref(db, `shops/${user.shopId}/customers`))
 
-  const customerData = {
+  const customerData: Customer = {
     ...customer,
     id: customer.id || customerRef.key!,
     createdAt: customer.createdAt || Date.now(),
@@ -68,17 +102,16 @@ export const deleteCustomer = async (id: string): Promise<void> => {
   const customerRef = ref(db, `shops/${user.shopId}/customers/${id}`)
   await remove(customerRef)
 
-  // Related bills, payments, orders delete
   const [bills, payments, orders] = await Promise.all([getBills(), getPayments(), getOrders()])
 
-  for (const bill of bills.filter((b: any) => b.customerId === id)) {
-    await remove(ref(db, `shops/${user.shopId}/bills/${bill.id}`))
+  for (const bill of bills.filter((b) => b.customerId === id)) {
+    if (bill.id) await remove(ref(db, `shops/${user.shopId}/bills/${bill.id}`))
   }
-  for (const payment of payments.filter((p: any) => p.customerId === id)) {
-    await remove(ref(db, `shops/${user.shopId}/payments/${payment.id}`))
+  for (const payment of payments.filter((p) => p.customerId === id)) {
+    if (payment.id) await remove(ref(db, `shops/${user.shopId}/payments/${payment.id}`))
   }
-  for (const order of orders.filter((o: any) => o.customerId === id)) {
-    await remove(ref(db, `shops/${user.shopId}/orders/${order.id}`))
+  for (const order of orders.filter((o) => o.customerId === id)) {
+    if (order.id) await remove(ref(db, `shops/${user.shopId}/orders/${order.id}`))
   }
 }
 
@@ -94,7 +127,7 @@ export const updateCustomer = async (id: string, customer: Partial<Customer>): P
 }
 
 // BILLS
-export const getBills = async (): Promise<any[]> => {
+export const getBills = async (): Promise<Bill[]> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) return []
 
@@ -106,15 +139,15 @@ export const getBills = async (): Promise<any[]> => {
   if (!snapshot.exists()) return []
   
   const data = snapshot.val()
-  return Object.values(data).reverse()
+  return Object.values(data).reverse() as Bill[]
 }
 
-export const saveBill = async (bill: any): Promise<any> => {
+export const saveBill = async (bill: Bill): Promise<Bill> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) throw new Error('Not logged in')
 
   const billRef = push(ref(db, `shops/${user.shopId}/bills`))
-  const billData = {
+  const billData: Bill = {
     ...bill,
     id: billRef.key!,
     createdAt: Date.now(),
@@ -125,8 +158,8 @@ export const saveBill = async (bill: any): Promise<any> => {
   return billData
 }
 
-// PAYMENTS - UPDATED WITH BILL BALANCE LOGIC
-export const getPayments = async (): Promise<any[]> => {
+// PAYMENTS
+export const getPayments = async (): Promise<Payment[]> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) return []
 
@@ -138,10 +171,10 @@ export const getPayments = async (): Promise<any[]> => {
   if (!snapshot.exists()) return []
   
   const data = snapshot.val()
-  return Object.values(data).reverse()
+  return Object.values(data).reverse() as Payment[]
 }
 
-export const savePayment = async (payment: any): Promise<any> => {
+export const savePayment = async (payment: Payment): Promise<Payment> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) throw new Error('Not logged in')
 
@@ -149,7 +182,7 @@ export const savePayment = async (payment: any): Promise<any> => {
     ? ref(db, `shops/${user.shopId}/payments/${payment.id}`)
     : push(ref(db, `shops/${user.shopId}/payments`))
 
-  const paymentData = {
+  const paymentData: Payment = {
     ...payment,
     id: payment.id || paymentRef.key!,
     createdAt: payment.createdAt || Date.now(),
@@ -158,17 +191,16 @@ export const savePayment = async (payment: any): Promise<any> => {
 
   await set(paymentRef, paymentData)
 
-  // Bill balance auto update if approved
   if (paymentData.status === 'approved' && paymentData.billId) {
     const billRef = ref(db, `shops/${user.shopId}/bills/${paymentData.billId}`)
     const billSnap = await get(billRef)
 
     if (billSnap.exists()) {
-      const bill = billSnap.val()
+      const bill = billSnap.val() as Bill
       const allPayments = await getPayments()
       const totalPaid = allPayments
-        .filter((p: any) => p.billId === paymentData.billId && p.status === 'approved')
-        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+        .filter((p) => p.billId === paymentData.billId && p.status === 'approved')
+        .reduce((sum, p) => sum + (p.amount || 0), 0)
 
       await update(billRef, {
         paidAmount: totalPaid,
@@ -182,7 +214,7 @@ export const savePayment = async (payment: any): Promise<any> => {
   return paymentData
 }
 
-export const updatePaymentStatus = async (id: string, status: string): Promise<void> => {
+export const updatePaymentStatus = async (id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) throw new Error('Not logged in')
 
@@ -192,20 +224,19 @@ export const updatePaymentStatus = async (id: string, status: string): Promise<v
     updatedAt: Date.now()
   })
 
-  // Recalculate bill balance
   const paymentSnap = await get(paymentRef)
   if (paymentSnap.exists()) {
-    const payment = paymentSnap.val()
+    const payment = paymentSnap.val() as Payment
     if (payment.billId) {
       const allPayments = await getPayments()
       const billRef = ref(db, `shops/${user.shopId}/bills/${payment.billId}`)
       const billSnap = await get(billRef)
       
       if (billSnap.exists()) {
-        const bill = billSnap.val()
+        const bill = billSnap.val() as Bill
         const totalPaid = allPayments
-          .filter((p: any) => p.billId === payment.billId && p.status === 'approved')
-          .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+          .filter((p) => p.billId === payment.billId && p.status === 'approved')
+          .reduce((sum, p) => sum + (p.amount || 0), 0)
 
         await update(billRef, {
           paidAmount: totalPaid,
@@ -219,7 +250,7 @@ export const updatePaymentStatus = async (id: string, status: string): Promise<v
 }
 
 // INVENTORY
-export const getInventory = async (): Promise<any[]> => {
+export const getInventory = async (): Promise<Medicine[]> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) return []
 
@@ -231,14 +262,14 @@ export const getInventory = async (): Promise<any[]> => {
   if (!snapshot.exists()) return []
   
   const data = snapshot.val()
-  return Object.values(data).reverse()
+  return Object.values(data).reverse() as Medicine[]
 }
 
-export const saveInventory = async (medicines: any[]): Promise<void> => {
+export const saveInventory = async (medicines: Medicine[]): Promise<void> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) throw new Error('Not logged in')
 
-  const updates: any = {}
+  const updates: Record<string, Medicine> = {}
   medicines.forEach((med) => {
     if (med.id) {
       updates[`shops/${user.shopId}/inventory/${med.id}`] = {
@@ -261,7 +292,7 @@ export const saveMedicine = async (medicine: Medicine): Promise<Medicine> => {
     ? ref(db, `shops/${user.shopId}/inventory/${medicine.id}`)
     : push(ref(db, `shops/${user.shopId}/inventory`))
 
-  const medicineData = {
+  const medicineData: Medicine = {
     ...medicine,
     id: medicine.id || medicineRef.key!,
     createdAt: medicine.createdAt || Date.now(),
@@ -295,8 +326,8 @@ export const deleteMedicine = async (id: string): Promise<void> => {
   await remove(medicineRef)
 }
 
-// ORDERS - FIXED
-export const getOrders = async (): Promise<any[]> => {
+// ORDERS
+export const getOrders = async (): Promise<Order[]> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) return []
 
@@ -308,15 +339,15 @@ export const getOrders = async (): Promise<any[]> => {
   if (!snapshot.exists()) return []
   
   const data = snapshot.val()
-  return Object.values(data).reverse()
+  return Object.values(data).reverse() as Order[]
 }
 
-export const saveOrder = async (order: any): Promise<any> => {
+export const saveOrder = async (order: Order): Promise<Order> => {
   const user = Auth.getCurrentUser()
   if (!user?.shopId) throw new Error('Not logged in')
 
   const orderRef = push(ref(db, `shops/${user.shopId}/orders`))
-  const orderData = {
+  const orderData: Order = {
     ...order,
     id: orderRef.key!,
     createdAt: Date.now(),
