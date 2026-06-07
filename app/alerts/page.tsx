@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 type Medicine = {
@@ -21,25 +21,21 @@ export default function AlertsPage() {
     setMedicines(inv)
   }, [])
 
-  const { today, thirtyDaysLater, expired, expiringSoon, lowStock, outOfStock } = useMemo(() => {
-    const today = new Date()
-    const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-    const expired = medicines.filter(m => m.expiry && new Date(m.expiry) < today)
-    const expiringSoon = medicines.filter(m => {
-      if (!m.expiry) return false
-      const expDate = new Date(m.expiry)
-      return expDate >= today && expDate <= thirtyDaysLater
-    })
-    const lowStock = medicines.filter(m => m.qty > 0 && m.qty < 10)
-    const outOfStock = medicines.filter(m => m.qty === 0)
-
-    return { today, thirtyDaysLater, expired, expiringSoon, lowStock, outOfStock }
-  }, [medicines])
-
   if (!isClient) {
     return <div className="min-h-screen bg-gray-50 p-6">Loading...</div>
   }
+
+  const today = new Date()
+  const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+  const expired = medicines.filter(m => m.expiry && new Date(m.expiry) < today)
+  const expiringSoon = medicines.filter(m => {
+    if (!m.expiry) return false
+    const expDate = new Date(m.expiry)
+    return expDate >= today && expDate <= thirtyDaysLater
+  })
+  const lowStock = medicines.filter(m => m.qty > 0 && m.qty < 10)
+  const outOfStock = medicines.filter(m => m.qty === 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-red-50 p-6">
@@ -49,7 +45,6 @@ export default function AlertsPage() {
           <Link href="/dashboard" className="text-blue-600 hover:underline font-semibold">← Dashboard</Link>
         </div>
 
-        {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4 mb-6">
           <div className="bg-red-600 text-white p-6 rounded-xl shadow-lg">
             <p className="text-sm opacity-90">Expired</p>
@@ -69,7 +64,6 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* Expired Medicines */}
         {expired.length > 0 && (
           <div className="bg-white p-6 rounded-xl shadow-sm border-2 border-red-500 mb-6">
             <h2 className="text-xl font-bold text-red-600 mb-4">⛔ Expired Medicines - Remove Immediately</h2>
@@ -87,7 +81,6 @@ export default function AlertsPage() {
           </div>
         )}
 
-        {/* Expiring Soon */}
         {expiringSoon.length > 0 && (
           <div className="bg-white p-6 rounded-xl shadow-sm border-2 border-yellow-500 mb-6">
             <h2 className="text-xl font-bold text-yellow-600 mb-4">⚠️ Expiring in 30 Days</h2>
@@ -108,7 +101,6 @@ export default function AlertsPage() {
           </div>
         )}
 
-        {/* Low Stock */}
         {lowStock.length > 0 && (
           <div className="bg-white p-6 rounded-xl shadow-sm border-2 border-orange-500 mb-6">
             <h2 className="text-xl font-bold text-orange-600 mb-4">📦 Low Stock Alert</h2>
@@ -126,7 +118,6 @@ export default function AlertsPage() {
           </div>
         )}
 
-        {/* Out of Stock */}
         {outOfStock.length > 0 && (
           <div className="bg-white p-6 rounded-xl shadow-sm border-2 border-gray-500">
             <h2 className="text-xl font-bold text-gray-600 mb-4">❌ Out of Stock</h2>
