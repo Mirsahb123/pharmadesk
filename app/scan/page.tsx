@@ -1,4 +1,5 @@
-'use client'
+"use client"
+
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DB } from '@/lib/storage'
@@ -315,7 +316,7 @@ export default function ScanPage() {
                       disabled={m.qty === 0}
                       className={`p-4 rounded-xl text-left transition-all border-2 ${
                         m.qty === 0
-                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
                           : 'bg-white hover:bg-blue-50 text-gray-800 border-blue-100 hover:border-blue-300 shadow-sm hover:shadow-md'
                       }`}
                     >
