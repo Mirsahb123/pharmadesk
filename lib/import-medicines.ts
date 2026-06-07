@@ -61,12 +61,10 @@ export async function import500Medicines() {
         name: item.name,
         type: cat.category,
         price: item.price,
-        packetQty: item.packetQty,
         tabletsPerPacket: item.tabletsPerPacket,
         qty: item.packetQty * item.tabletsPerPacket,
         expiry: item.expiry || '',
         qrCode: qrCode,
-        cost_price: item.cost_price || 0
       })
       
       count++
