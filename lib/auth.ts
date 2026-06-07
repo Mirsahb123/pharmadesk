@@ -27,18 +27,28 @@ export type User = {
 export const Auth = {
   getCurrentUser(): User | null {
     if (typeof window === 'undefined') return null
-    const user = localStorage.getItem('currentUser')
-    return user? JSON.parse(user) : null
+    try {
+      const user = localStorage.getItem('currentUser')
+      return user? JSON.parse(user) : null
+    } catch {
+      return null
+    }
   },
 
   setCurrentUser(user: User) {
     if (typeof window!== 'undefined') {
-      localStorage.setItem('currentUser', JSON.stringify(user))
+      try {
+        localStorage.setItem('currentUser', JSON.stringify(user))
+      } catch (error) {
+        console.error('localStorage error:', error)
+      }
     }
   },
 
   logout() {
-    localStorage.removeItem('currentUser')
+    if (typeof window!== 'undefined') {
+      localStorage.removeItem('currentUser')
+    }
   },
 
   getCurrentShopId(): string | null {
@@ -69,7 +79,7 @@ export const Auth = {
 
     const now = new Date()
     const newShopData = {
-...shop,
+     ...shop,
       cnic: cleanCNIC,
       password: shop.password.trim(),
       createdAt: now.toISOString(),
@@ -97,7 +107,7 @@ export const Auth = {
     return snapshot.exists()? snapshot.val() : defaultValue
   },
 
-  async setShopData(key: string, value: any) {
+  async setShopData(key: string, value: unknown) {
     const user = this.getCurrentUser()
     if (!user?.shopId) return
     await set(ref(db, `shops/${user.shopId}/data/${key}`), value)
