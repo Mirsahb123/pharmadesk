@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast, Toaster } from 'sonner'
@@ -22,7 +23,6 @@ export default function LoginPage() {
     if (!cnic ||!password) return toast.error('CNIC aur Password dono likho')
     setLoading(true)
 
-    // Super Admin check
     if (cnic.replace(/\D/g, '') === SUPER_ADMIN.cnic.replace(/\D/g, '') && password === SUPER_ADMIN.password) {
       const user = { cnic, role: 'superadmin' as const, name: 'Super Admin', id: 'superadmin' }
       Auth.setCurrentUser(user)
@@ -32,7 +32,6 @@ export default function LoginPage() {
       return
     }
 
-    // Shop Owner check - Firebase
     const shop = await Auth.getShopByCNIC(cnic)
 
     if (!shop || shop.password!== password) {
