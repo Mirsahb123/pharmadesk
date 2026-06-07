@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -6,11 +7,9 @@ export default function ResetPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Sab staff clear karo
     localStorage.removeItem('staff')
     localStorage.removeItem('currentUser')
 
-    // Naya default admin banao
     const defaultAdmin = {
       id: 1,
       name: 'Admin',
