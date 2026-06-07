@@ -1,14 +1,10 @@
-"use client"
-import { useEffect } from 'react'
+import { redirect } from 'next/navigation';
 
-export default function StorePage() {
-  useEffect(() => {
-    window.location.href = '/dashboard'
-  }, [])
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p>Redirecting...</p>
-    </div>
-  )
+export default async function StorePage({ 
+  params 
+}: { 
+  params: Promise<{ store: string }> 
+}) {
+  const { store } = await params;
+  redirect(`/store/${store}/dashboard`);
 }
