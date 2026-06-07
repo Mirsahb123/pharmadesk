@@ -1,6 +1,6 @@
 // lib/storage.ts
-import { db, ref, get, set, update, remove } from '@/lib/firebase'
-import { Auth } from '@/lib/auth'
+import { db, ref, get, set, update } from '@/lib/firebase'
+import { auth } from '@/lib/auth'
 
 export type Medicine = {
   id?: string
@@ -37,7 +37,7 @@ export type Bill = {
 // SAAS SYSTEM - FIREBASE REALTIME DB
 export const DB = {
   getCustomers: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/customers`))
     if (snapshot.exists()) {
@@ -47,13 +47,13 @@ export const DB = {
     return []
   },
   saveCustomers: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/customers`), data)
   },
   
   getBills: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/bills`))
     if (snapshot.exists()) {
@@ -63,14 +63,14 @@ export const DB = {
     return []
   },
   saveBills: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/bills`), data)
   },
   
   // BILL SAVE + STOCK UPDATE
   saveBill: async (billData: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     
     // 1. Save bill
@@ -95,7 +95,7 @@ export const DB = {
   },
   
   getPayments: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/payments`))
     if (snapshot.exists()) {
@@ -105,13 +105,13 @@ export const DB = {
     return []
   },
   savePayments: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/payments`), data)
   },
   
   getOrders: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/orders`))
     if (snapshot.exists()) {
@@ -121,13 +121,13 @@ export const DB = {
     return []
   },
   saveOrders: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/orders`), data)
   },
   
   getInventory: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/inventory`))
     if (snapshot.exists()) {
@@ -137,25 +137,25 @@ export const DB = {
     return []
   },
   saveInventory: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/inventory`), data)
   },
   
   getShopInfo: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return { name: 'Pharmadesk' }
     const snapshot = await get(ref(db, `shops/${shopId}/shopInfo`))
     return snapshot.exists()? snapshot.val() : { name: 'Pharmadesk' }
   },
   saveShopInfo: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/shopInfo`), data)
   },
   
   getPaymentMethods: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/paymentMethods`))
     if (snapshot.exists()) {
@@ -165,25 +165,25 @@ export const DB = {
     return []
   },
   savePaymentMethods: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/paymentMethods`), data)
   },
   
   getNotificationSound: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return null
     const snapshot = await get(ref(db, `shops/${shopId}/notificationSound`))
     return snapshot.exists()? snapshot.val() : null
   },
   saveNotificationSound: async (data: string) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/notificationSound`), data)
   },
 
   getStaff: async () => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return []
     const snapshot = await get(ref(db, `shops/${shopId}/staff`))
     if (snapshot.exists()) {
@@ -193,7 +193,7 @@ export const DB = {
     return []
   },
   saveStaff: async (data: any) => {
-    const shopId = Auth.getCurrentShopId()
+    const shopId = auth.getCurrentShopId()
     if (!shopId) return
     await set(ref(db, `shops/${shopId}/staff`), data)
   }
