@@ -1,26 +1,45 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 
+type Medicine = {
+  id: string
+  name: string
+  expiry?: string
+  qty: number
+  type?: string
+  price?: number
+}
+
 export default function AlertsPage() {
-  const [medicines, setMedicines] = useState<any[]>([])
-  
+  const [medicines, setMedicines] = useState<Medicine[]>([])
+  const [isClient, setIsClient] = useState(false)
+
   useEffect(() => {
+    setIsClient(true)
     const inv = JSON.parse(localStorage.getItem('inventory') || '[]')
     setMedicines(inv)
   }, [])
 
-  const today = new Date()
-  const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+  const { today, thirtyDaysLater, expired, expiringSoon, lowStock, outOfStock } = useMemo(() => {
+    const today = new Date()
+    const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  const expired = medicines.filter(m => m.expiry && new Date(m.expiry) < today)
-  const expiringSoon = medicines.filter(m => {
-    if (!m.expiry) return false
-    const expDate = new Date(m.expiry)
-    return expDate >= today && expDate <= thirtyDaysLater
-  })
-  const lowStock = medicines.filter(m => m.qty > 0 && m.qty < 10)
-  const outOfStock = medicines.filter(m => m.qty === 0)
+    const expired = medicines.filter(m => m.expiry && new Date(m.expiry) < today)
+    const expiringSoon = medicines.filter(m => {
+      if (!m.expiry) return false
+      const expDate = new Date(m.expiry)
+      return expDate >= today && expDate <= thirtyDaysLater
+    })
+    const lowStock = medicines.filter(m => m.qty > 0 && m.qty < 10)
+    const outOfStock = medicines.filter(m => m.qty === 0)
+
+    return { today, thirtyDaysLater, expired, expiringSoon, lowStock, outOfStock }
+  }, [medicines])
+
+  if (!isClient) {
+    return <div className="min-h-screen bg-gray-50 p-6">Loading...</div>
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-red-50 p-6">
@@ -74,7 +93,7 @@ export default function AlertsPage() {
             <h2 className="text-xl font-bold text-yellow-600 mb-4">⚠️ Expiring in 30 Days</h2>
             <div className="space-y-2">
               {expiringSoon.map(m => {
-                const daysLeft = Math.ceil((new Date(m.expiry).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                const daysLeft = Math.ceil((new Date(m.expiry!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
                 return (
                   <div key={m.id} className="flex justify-between items-center p-3 bg-yellow-50 rounded border border-yellow-200">
                     <div>
